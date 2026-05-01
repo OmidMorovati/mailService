@@ -21,7 +21,7 @@ func TryCreate(db *sql.DB) {
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     email TEXT UNIQUE,
     confirmed_at INTEGER,
-    opt_out INTEGER,
+    opt_out INTEGER
 	);`)
 
 	if err != nil {
@@ -55,7 +55,7 @@ func emailEntryFromRow(row *sql.Rows) (*EmailEntry, error) {
 }
 
 func CreateEmail(db *sql.DB, email string) error {
-	_, err := db.Exec(`INSERT INTO emails (email, confirmed_at, opt_out) VALUES (?, 0, false)`, email)
+	_, err := db.Exec(`INSERT INTO email_entries (email, confirmed_at, opt_out) VALUES (?, 0, false)`, email)
 
 	if err != nil {
 		log.Println(err)
@@ -65,7 +65,7 @@ func CreateEmail(db *sql.DB, email string) error {
 }
 
 func GetEmail(db *sql.DB, email string) (*EmailEntry, error) {
-	rows, err := db.Query(`SELECT * FROM emails WHERE email = ?`, email)
+	rows, err := db.Query(`SELECT * FROM email_entries WHERE email = ?`, email)
 	if err != nil {
 		log.Println(err)
 		return nil, err
@@ -87,7 +87,7 @@ func UpdateEmail(db *sql.DB, entry EmailEntry) error {
 	t := entry.ConfirmedAt.Unix()
 
 	_, err := db.Exec(`
-		INSERT INTO emails(email, confirmed_at, opt_out) VALUES (?, ?, ?) 
+		INSERT INTO email_entries(email, confirmed_at, opt_out) VALUES (?, ?, ?) 
 		ON CONFLICT(email) DO UPDATE SET confirmed_at = ?, opt_out = ?`,
 		entry.EmailAddress, t, entry.OptOut, t, entry.ConfirmedAt)
 	if err != nil {
@@ -98,7 +98,7 @@ func UpdateEmail(db *sql.DB, entry EmailEntry) error {
 }
 
 func DeleteEmail(db *sql.DB, email string) error {
-	_, err := db.Exec(`UPDATE email SET opt_out = true WHERE email = ?`, email)
+	_, err := db.Exec(`UPDATE email_entries SET opt_out = true WHERE email = ?`, email)
 	if err != nil {
 		log.Println(err)
 		return err
@@ -115,7 +115,7 @@ func GetEmailPaginated(db *sql.DB, params GetEmailPaginatedQueryParams) ([]Email
 	var empty []EmailEntry
 
 	rows, err := db.Query(`
-			SELECT id, email, confirmed_at, opt_out FROM emails 
+			SELECT id, email, confirmed_at, opt_out FROM email_entries 
         	WHERE opt_out = FALSE ORDER BY id DESC LIMIT ? OFFSET ?`, params.Count, (params.Page-1)*params.Count,
 	)
 
