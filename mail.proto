@@ -1,11 +1,35 @@
 syntax = "proto3";
 
-package mail;
+package proto;
 
-option go_package = "OmidMorovati.com/mailingService;mail";
+option go_package = "OmidMorovati.com/mailingService";
 
-message Email {
-  string to = 1;
-  string subject = 2;
-  string body = 3;
+message EmailEntry {
+  int64 id = 1;
+  string email = 2;
+  int64 confirmed_at = 3;
+  bool opt_out = 4;
+}
+
+//requests
+message CreateEmailRequest {string email_addr = 1;}
+message GetEmailRequest {string email_addr = 1;}
+message UpdateEmailRequest {EmailEntry email_entry = 1;}
+message DeleteEmailRequest {string email_addr = 1;}
+message GetEmailPaginatedRequest {
+  int32 page = 1;
+  int32 count = 2;
+}
+
+//responses
+message EmailResponse {optional EmailEntry email_entry = 1;}
+message GetEmailPaginatedResponse {repeated EmailEntry email_entries = 1;}
+
+//service definition to run code on server
+service MailingService {
+  rpc CreateEmail(CreateEmailRequest) returns (EmailResponse) {}
+  rpc GetEmail(GetEmailRequest) returns (EmailResponse) {}
+  rpc UpdateEmail(UpdateEmailRequest) returns (EmailResponse) {}
+  rpc DeleteEmail(DeleteEmailRequest) returns (EmailResponse) {}
+  rpc GetEmailPaginated(GetEmailPaginatedRequest) returns (GetEmailPaginatedResponse) {}
 }
